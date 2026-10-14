@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CombiDesign</title>
+<meta name="description" content="CombiDesign: how many experiments are needed to study combinations of factors (e.g. volatile compounds), and the combinatorial design to run them. After Dennis Shasha's combinatorial design. Runs entirely in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fcfcfb; --fg:#1d232b; --sub:#5d6670; --rule:#dfe3e7; --soft:#f4f6f5; --card:#ffffff;
+  --link:#1f6f5c; --brand:#1f6f5c; --brand2:#2b8a72; --hi:#e6f2ee; --err:#b42318; --ok:#1f6b2e; --warn:#a15c00;
+  --on:#1f6f5c; --off:#e9eeec; --cut:#d1495b; --grid:#eceef1; --line:#1f6f5c; --bad:#d1495b;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif; --sans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1514; --fg:#e6ece9; --sub:#9fb0aa; --rule:#26312e; --soft:#141c1a; --card:#121918;
+  --link:#7fd1b7; --brand:#2b8a72; --brand2:#46b393; --hi:#1b2c27; --err:#ff8a7a; --ok:#7fd18b; --warn:#f0b35a;
+  --on:#46b393; --off:#1f2a27; --cut:#ff6b7d; --grid:#1f2a27; --line:#7fd1b7; --bad:#ff6b7d }}
+:root[data-theme="dark"]{--bg:#0f1514;--fg:#e6ece9;--sub:#9fb0aa;--rule:#26312e;--soft:#141c1a;--card:#121918;
+  --link:#7fd1b7;--brand:#2b8a72;--brand2:#46b393;--hi:#1b2c27;--err:#ff8a7a;--ok:#7fd18b;--warn:#f0b35a;
+  --on:#46b393;--off:#1f2a27;--cut:#ff6b7d;--grid:#1f2a27;--line:#7fd1b7;--bad:#ff6b7d}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg)}
+body{font:16px/1.55 var(--sans)}
+a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}
+
+.banner{position:relative;height:140px;overflow:hidden;background:linear-gradient(105deg,#0c211c,#13392f 45%,#0f2530)}
+.banner svg{position:absolute;inset:0;width:100%;height:100%}
+.banner .title{position:absolute;left:0;right:0;bottom:16px;max-width:1120px;margin:0 auto;padding:0 16px;color:#fff}
+.banner h1{margin:0;font:700 42px/1.05 var(--serif);letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.banner h1 small{font-weight:400;font-size:.5em;opacity:.85;margin-left:.3em}
+.banner p{margin:4px 0 0;font:italic 400 17px var(--serif);opacity:.9;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+nav{border-bottom:1px solid var(--rule)}
+nav .in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;gap:22px;flex-wrap:wrap;align-items:center;font:600 13px var(--sans);text-transform:uppercase;letter-spacing:.06em}
+nav a{color:var(--fg)}nav a.cur{color:var(--brand2)}
+nav .sp{flex:1}
+#theme{background:none;border:1px solid var(--rule);color:var(--sub);border-radius:6px;font:600 12px var(--sans);padding:2px 8px;cursor:pointer}
+
+main{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+h2{font:600 26px/1.2 var(--serif);margin:26px 0 4px}
+h2:first-child{margin-top:10px}
+h3{font:600 20px/1.3 var(--serif);margin:30px 0 6px}
+.lead{font:400 17px/1.4 var(--serif);color:var(--sub);margin:0 0 14px;max-width:82ch}
+.note{font-size:13.5px;color:var(--sub)}
+
+form{border:1px solid var(--rule);background:var(--soft);border-radius:10px;padding:6px 18px 14px}
+.row{display:grid;grid-template-columns:240px 1fr;gap:6px 18px;padding:12px 0;border-bottom:1px dashed var(--rule)}
+.row:last-of-type{border-bottom:0}
+.row>.k{font-weight:600;padding-top:3px}
+.row .k small{display:block;font-weight:400;color:var(--sub);font-size:12.5px;line-height:1.35;margin-top:2px}
+textarea{width:100%;min-height:90px;resize:vertical;font:13px/1.45 var(--mono);color:var(--fg);background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:8px}
+select,input[type=number],input[type=text]{font:14px var(--sans);color:var(--fg);background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:4px 8px}
+input[type=number]{width:84px}
+textarea:focus,select:focus,input:focus{outline:2px solid var(--brand2);outline-offset:1px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
+.opts label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.opts .n{color:var(--sub);font-size:13px}
+details.adv{margin-top:4px}
+details.adv summary{cursor:pointer;color:var(--link);font-size:14px;padding:8px 0}
+.buttons{display:flex;gap:10px;align-items:center;padding-top:14px;flex-wrap:wrap}
+button.main,button.sec{font:600 15px var(--sans);border-radius:6px;padding:8px 22px;cursor:pointer;border:1px solid transparent}
+button.main{background:var(--brand);color:#fff}button.main:hover{background:var(--brand2)}
+button.main:disabled{opacity:.55;cursor:wait}
+button.sec{background:transparent;color:var(--fg);border-color:var(--rule)}
+.err{color:var(--err);font-weight:600}
+.status{font-size:14px;color:var(--sub)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:16px 0 4px}
+.card{border:1px solid var(--rule);border-radius:10px;background:var(--card);padding:12px 16px}
+.card .lab{font:600 13px var(--sans);color:var(--sub);text-transform:uppercase;letter-spacing:.05em}
+.card .big{font:700 40px/1.1 var(--serif);margin:4px 0 2px;color:var(--brand)}
+.card .big.bad{color:var(--bad)}
+.card .big small{font:400 15px var(--sans);color:var(--sub);margin-left:4px}
+.card .sub{font-size:13.5px;color:var(--sub)}
+.card.dim .big{color:var(--sub)}
+.flag{font-size:13.5px;color:var(--warn);margin:6px 0 0}
+
+.chartbox{border:1px solid var(--rule);border-radius:10px;background:var(--card);padding:10px 10px 4px;margin-top:14px}
+.chartbox svg{display:block;width:100%;height:auto}
+.chartbox .ttl{font:600 14px var(--sans);margin:0 4px 2px}
+.chartbox .sub{font-size:12.5px;color:var(--sub);margin:0 4px 6px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin:4px 4px 8px}
+.legend i{display:inline-block;width:14px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-2px}
+.progress{height:6px;border-radius:3px;background:var(--grid);overflow:hidden;margin:10px 0 0;max-width:420px}
+.progress div{height:100%;width:0;background:var(--brand2);transition:width .2s}
+.summary{margin:10px 0 4px;font-size:16px;max-width:90ch}
+.dl{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.dl button{font:600 13px var(--sans);background:var(--card);color:var(--fg);border:1px solid var(--rule);border-radius:6px;padding:5px 12px;cursor:pointer}
+.dl button:hover{border-color:var(--brand2)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--rule);border-radius:8px;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 9px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+thead th{font-weight:600;color:var(--sub);white-space:nowrap;border-bottom:2px solid var(--rule);background:var(--card)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.heat{overflow-x:auto}
+.hl:empty{display:none}
+.hl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13.5px;margin:10px 4px 6px;align-items:center}
+.hl .chips{display:flex;gap:3px}
+.hl .chips span{display:inline-block;min-width:30px;padding:1px 4px;border-radius:3px;font:600 11.5px var(--sans);text-align:center}
+.prose{max-width:84ch}
+.prose p{margin:0 0 12px}
+.prose ol,.prose ul{margin:0 0 12px;padding-left:22px}
+.formula{font:16px/1.7 var(--serif);background:var(--soft);border-left:3px solid var(--brand2);padding:8px 14px;margin:8px 0 14px;border-radius:0 6px 6px 0}
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:16px;font-size:13.5px;color:var(--sub)}
+footer p{margin:0 0 8px;max-width:100ch}
+.credit{border:1px solid var(--rule);background:var(--hi);border-radius:10px;padding:12px 16px;margin:18px 0 0;font-size:14.5px;color:var(--fg)}
+.loader{display:inline-block;width:12px;height:12px;border:2px solid var(--rule);border-top-color:var(--brand2);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:760px){
+  .row{grid-template-columns:1fr}.banner h1{font-size:32px}
+  nav .in{gap:14px}.hide-s{display:none}
+}
+</style>
+</head>
+<body>
+<header class="banner">
+  <svg id="mosaic" aria-hidden="true"></svg>
+  <div class="title"><h1>CombiDesign<small>2026</small></h1><p>how many experiments to study combinations of compounds?</p></div>
+</header>
+<nav><div class="in">
+  <a href="#calc" class="cur">Calculator</a>
+  <a href="#design">Design</a>
+  <a href="#how">How it works</a>
+  <a href="#credits">Credits</a>
+  <a href="https://github.com/GabKrouk/CombiDesign">Code &amp; simulations</a>
+  <span class="sp"></span>
+  <button id="theme" type="button" title="Switch light / dark">light / dark</button>
+</div></nav>
+
+<main>
+  <h2 id="calc">How many experiments?</h2>
+  <p class="lead">You want to know which of your compounds (volatile organic compounds, hormones, nutrients…) act on
+  their own and which act only in combination. Testing every pair or triplet separately quickly becomes impossible.
+  A <b>combinatorial design</b> (D. Shasha) mixes many compounds in each experiment, so that every pair or triplet is
+  seen in all its presence / absence situations. This calculator tells you how many mixtures you need to find
+  <b>all</b> the effects with 95 % confidence. <span class="note">Everything runs in your browser.</span></p>
+
+  <form id="cform" autocomplete="off" novalidate>
+    <div class="row">
+      <label class="k" for="K">Compounds tested<small>number of factors, each present or absent</small></label>
+      <div class="opts"><input type="number" id="K" value="18" min="3" max="40"> <span class="n">compounds</span></div>
+    </div>
+    <div class="row">
+      <div class="k">Combined effects between<small>the order of the interactions you expect</small></div>
+      <div class="opts">
+        <label><input type="radio" name="order" value="2" checked> 2 compounds (pairs)</label>
+        <label><input type="radio" name="order" value="3"> 3 compounds (triplets)</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="k">Expected effects<small>your best guess; when unsure, take the higher number</small></div>
+      <div class="opts">
+        <label><input type="number" id="S" value="14" min="0" max="40"> compounds with an effect of their own</label>
+        <label><input type="number" id="M" value="5" min="0" max="30"> <span id="Mlab">combined effects (pairs)</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <label class="k" for="reps">Replicates<small>per mixture</small></label>
+      <div class="opts"><input type="number" id="reps" value="3" min="1" max="10"> <span class="n">tubes per mixture</span></div>
+    </div>
+    <details class="adv"><summary>Effect sizes, noise and simulation settings</summary>
+      <div class="row">
+        <div class="k">Measurement noise<small>standard deviation of one replicate</small></div>
+        <div class="opts"><input type="number" id="sd" value="1" min="0.05" step="0.1"></div>
+      </div>
+      <div class="row">
+        <div class="k">Size of the simple effects<small>in the same unit as the noise (absolute value)</small></div>
+        <div class="opts"><label>from <input type="number" id="mainLo" value="0.8" min="0" step="0.1"></label><label>to <input type="number" id="mainHi" value="3" min="0" step="0.1"></label></div>
+      </div>
+      <div class="row">
+        <div class="k">Size of the combined effects<small>absolute value</small></div>
+        <div class="opts"><label>from <input type="number" id="intLo" value="2.5" min="0" step="0.1"></label><label>to <input type="number" id="intHi" value="5" min="0" step="0.1"></label></div>
+      </div>
+      <div class="row">
+        <div class="k">Simulation<small>more simulations = more precise, slower</small></div>
+        <div class="opts">
+          <label><select id="nsim"><option value="100">100</option><option value="200" selected>200</option><option value="400">400</option></select> simulations per number of mixtures</label>
+          <label>seed <input type="number" id="seed" value="1" min="1"></label>
+        </div>
+      </div>
+    </details>
+  </form>
+
+  <div class="cards" id="cards"></div>
+  <p class="flag" id="flag"></p>
+  <div class="buttons">
+    <button class="main" id="simulate" type="button">Simulate my situation</button>
+    <span class="status" id="simstatus">Runs a few hundred simulated experiments for each number of mixtures, with your settings (≈ 10 s for pairs, 1–3 min for triplets).</span>
+  </div>
+  <div class="progress" id="simprog" hidden><div></div></div>
+
+  <section id="simres" hidden aria-live="polite">
+    <div class="summary" id="simsummary"></div>
+    <div class="chartbox">
+      <div class="ttl">Chance of finding every effect, by number of mixtures</div>
+      <div class="sub">Each point: share of simulated experiments in which every true effect was found and no false combined effect was reported. Curve: logistic fit.</div>
+      <div id="simchart"></div>
+    </div>
+    <div class="scroll"><table id="simtab"><thead><tr><th class="num">mixtures</th><th class="num">tubes</th><th class="num">all effects found</th><th class="num">simple effects found</th><th class="num">combined effects exact</th><th class="num">simulations</th></tr></thead><tbody></tbody></table></div>
+    <div class="dl"><button type="button" id="dlsim">Table (TSV)</button><button type="button" id="dlsimsvg">Chart (SVG)</button><button type="button" id="todesign">Make the design for this number of mixtures ↓</button></div>
+  </section>
+
+  <h2 id="design">The design</h2>
+  <p class="lead">The mixtures to prepare: one row per mixture, one column per compound, coloured when the compound
+  is present. Every design is checked: the number of pair or triplet situations that never occur is reported (it must be 0).</p>
+  <form id="dform" autocomplete="off" novalidate>
+    <div class="row">
+      <div class="k">Design<small>what the mixtures must cover</small></div>
+      <div class="opts" style="flex-direction:column;align-items:flex-start">
+        <label><input type="radio" name="kind" value="pairs"> every pair in its 4 situations, with the fewest mixtures <span class="n">(optimal design)</span></label>
+        <label><input type="radio" name="kind" value="triplets"> every triplet in its 8 situations <span class="n">(covering design found by search)</span></label>
+        <label><input type="radio" name="kind" value="waves" checked> <input type="number" id="DN" value="80" min="4" max="2000"> mixtures in waves <span class="n">(triplet design, then its foldover, then permuted copies: the recommended plan)</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <label class="k" for="names">Compound names<small>optional, one per line (otherwise C1, C2…)</small></label>
+      <div><textarea id="names" spellcheck="false" placeholder="limonene&#10;linalool&#10;β-caryophyllene&#10;…"></textarea></div>
+    </div>
+    <div class="row">
+      <label class="k" for="hl">Show one combination<small>2 or 3 compound numbers, e.g. 2, 6</small></label>
+      <div class="opts"><input type="text" id="hl" value="" placeholder="e.g. 2, 6" style="width:120px"> <span class="n">colours each mixture by the situation of these compounds</span></div>
+    </div>
+    <div class="buttons">
+      <button class="main" id="gen" type="submit">Generate the design</button>
+      <span class="status" id="dstatus"></span>
+    </div>
+  </form>
+  <section id="dres" hidden>
+    <div class="summary" id="dsummary"></div>
+    <div class="chartbox">
+      <div class="legend" id="dlegend"></div>
+      <div class="hl" id="hllegend"></div>
+      <div class="heat" id="heat"></div>
+    </div>
+    <div class="dl"><button type="button" id="dlcsv">Design (CSV)</button><button type="button" id="dlheat">Heatmap (SVG)</button></div>
+  </section>
+
+  <section id="how" class="prose">
+    <h2>How it works</h2>
+    <p><b>Combinatorial design.</b> With <i>K</i> compounds there are <i>K</i>(<i>K</i>−1)/2 pairs and
+    <i>K</i>(<i>K</i>−1)(<i>K</i>−2)/6 triplets (153 and 816 for 18 compounds). Instead of one experiment per combination,
+    each mixture contains many compounds, chosen so that every pair (or triplet) appears in all its situations:
+    none present, each one alone, both (all three) together. This is the approach of Dennis Shasha's
+    <a href="https://cs.nyu.edu/~shasha/papers/comb.html">CombGeneric</a>, first applied to plant signalling by
+    Shasha et al. (2001), itself inspired by the AETG method of software testing.</p>
+    <p><b>Pairs.</b> The smallest design is known exactly (Kleitman &amp; Spencer 1973): the first mixture has no compound,
+    and each compound is present in a different set of ⌈<i>N</i>/2⌉ of the other mixtures. 18 compounds need 8 mixtures,
+    50 need 9. <b>Triplets</b> have no closed solution; the page searches one by a greedy construction followed by
+    simulated annealing (18 compounds: 20 mixtures).</p>
+    <p><b>Why more mixtures than the minimal design.</b> The minimal designs show each combination, but with 18 compounds and
+    only 8 or 20 mixtures, the effects cannot be told apart once many compounds are active: there are more unknowns than
+    mixtures. The <b>wave plan</b> adds the <i>foldover</i> of the triplet design (every present compound becomes absent and
+    vice versa), which separates the simple effects from the combined ones, then copies with the compounds permuted.
+    Run the waves one after the other: predict each new wave with the model of the previous ones; when the prediction error
+    is close to the replicate noise, the result is solid.</p>
+    <p><b>Simulations.</b> For each number of mixtures, experiments are simulated: a random balanced design (each compound in
+    half of the mixtures), <i>S</i> compounds with a simple effect, <i>M</i> combined effects, noise, replicates. The analysis
+    estimates the simple effect of every compound, then adds combined effects one at a time among all candidates (all pairs,
+    or all pairs and triplets) while the best one is significant after Bonferroni correction (family-wise risk 1 %).
+    A simulation succeeds when every true simple effect is significant (5 %) and exactly the true combined effects are kept.
+    <i>N</i><sub>95</sub> is where the logistic fit of the success rate reaches 95 %.</p>
+    <p><b>Formulas.</b> Fitted on 54 (pairs) and 42 (triplets) combinations of <i>S</i> and <i>M</i>, 200 simulations each,
+    for 18 compounds, 3 replicates, noise SD 1, simple effects 0.8–3 and combined effects 2.5–5:</p>
+    <div class="formula">pairs: &nbsp;<i>N</i><sub>95</sub> ≈ 35 + 0.45 <i>S</i> + 6.4 <i>M</i><sub>2</sub> &nbsp;&nbsp;(R² = 0.996)<br>
+    triplets: &nbsp;<i>N</i><sub>95</sub> ≈ 39 + 0.15 <i>S</i> + 7.9 <i>M</i><sub>3</sub> + 0.9 <i>M</i><sub>3</sub>² &nbsp;&nbsp;(R² = 0.996)</div>
+    <p>About 35–40 mixtures are needed to estimate the 18 simple effects and separate them from noise; each simple effect
+    then costs almost nothing, each pairwise effect about 6 mixtures, and triplet effects cost more and more
+    (≈ 9 for the first, ≈ 1.8 more for each next one): a triplet is complete in only 1/8 of the mixtures (1/4 for a pair) and is
+    searched among 969 candidates instead of 153. On configurations not used for the fit, the formula gives 91–94 %:
+    the page adds a 10 % margin. Halving the combined effects multiplies <i>N</i> by ≈ 1.6; one replicate instead of three
+    by ≈ 2.3 (but uses fewer tubes). For other settings, use <i>Simulate my situation</i>.</p>
+  </section>
+
+  <div class="credit" id="credits"><b>Credits.</b> The combinatorial design approach is the work of
+    <b>Dennis Shasha</b> (Courant Institute, New York University): <a href="https://cs.nyu.edu/~shasha/papers/comb.html">CombGeneric,
+    combinatorial design for experimental design</a>, developed with Gloria Coruzzi's lab. Please cite:
+    Shasha DE, Kouranov AY, Lejay LV, Chou MF, Coruzzi GM (2001) Using combinatorial design to study regulation by multiple
+    input signals. A tool for parsimony in the post-genomics era. <i>Plant Physiology</i> 127:1590–1594.
+    <a href="https://doi.org/10.1104/pp.010683">doi:10.1104/pp.010683</a></div>
+
+  <footer>
+    <p><b>CombiDesign</b> — G. Krouk (2026): calculator, simulations and web page, after D. Shasha's combinatorial design.
+    Code and simulation scripts: <a href="https://github.com/GabKrouk/CombiDesign">github.com/GabKrouk/CombiDesign</a> (MIT licence).</p>
+    <p>Optimal pair design: Kleitman DJ, Spencer J (1973) Families of k-independent sets. <i>Discrete Mathematics</i> 6:255–262.
+    AETG: Cohen DM, Dalal SR, Fredman ML, Patton GC (1997) The AETG system: an approach to testing based on combinatorial
+    design. <i>IEEE Transactions on Software Engineering</i> 23:437–444.</p>
+    <p>Also: <a href="https://gabkrouk.github.io/Regine/">Régine</a> · <a href="https://github.com/GabKrouk/genecloud">GeneCloud</a></p>
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

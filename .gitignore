@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+node_modules/
+analysis/prep/
+data/**/*
+!data/README.md
+analysis/log_*.txt
+manuscript/render/
+manuscript/ms.json
+.DS_Store
+~$*
+log_*.txt

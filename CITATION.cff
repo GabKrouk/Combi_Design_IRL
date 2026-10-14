@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the manuscript and the original combinatorial design paper."
+title: "Combi_Design_IRL: finding interactions among many molecules with a small fraction of exhaustive experiments"
+authors:
+  - family-names: Krouk
+    given-names: Gabriel
+  - family-names: Shasha
+    given-names: Dennis E.
+    affiliation: "Courant Institute of Mathematical Sciences, New York University"
+license: MIT
+version: 1.0.0
+date-released: 2026-10-14
+preferred-citation:
+  type: article
+  title: "Using combinatorial design to study regulation by multiple input signals. A tool for parsimony in the post-genomics era"
+  authors:
+    - family-names: Shasha
+      given-names: Dennis E.
+    - family-names: Kouranov
+      given-names: Andrew Y.
+    - family-names: Lejay
+      given-names: Laurence V.
+    - family-names: Chou
+      given-names: M. Frances
+    - family-names: Coruzzi
+      given-names: Gloria M.
+  journal: "Plant Physiology"
+  volume: 127
+  start: 1590
+  end: 1594
+  year: 2001
+  doi: "10.1104/pp.010683"
