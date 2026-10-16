@@ -3,9 +3,9 @@
 **Finding interactions among many molecules with a small fraction of exhaustive experiments**
 Gabriel Krouk & Dennis E. Shasha
 
-This repository contains everything behind the manuscript: the combinatorial designs, the simulations
+This repository contains the code and results behind the study: the combinatorial designs, the simulations
 (up to 100 molecules), the benchmark on three real complete factorial experiments ("in real life", hence *IRL*),
-the calibration of the planning model, the figures, the manuscript sources, and a small web calculator.
+the calibration of the planning model, the figures, and a small web calculator.
 
 ## The idea in one paragraph
 
@@ -21,8 +21,11 @@ N95 ≈ 1.6 K + 6 M + 50 / d² − 15
 ```
 
 *N95* = mixtures (3 replicates each) needed to recover 95% of *M* pairwise interactions of size *d*
-(in replicate standard deviations). See `manuscript/` for details and caveats (weak interactions,
-dense backgrounds of small interactions, three-way interactions).
+(in replicate standard deviations). The coefficient of *K* is 1.58 (95% CI 1.44–1.75 across scenarios;
+1.35–1.58 with the empirical noise of the real datasets). With one measurement per mixture, replace
+50/d² by about 150/d²: distinct mixtures measured once do at least as well as triplicates for the same
+number of measurements. Caveats: weak interactions, dense backgrounds of small interactions, and
+three-way interactions are more expensive.
 
 ## Repository layout
 
@@ -39,15 +42,16 @@ analysis/            Python code (run from this folder)
   recal_check.py       calibrated vs naive simulation vs reality (Fig. 5A-B)
   simK.py / simK2.py   planning simulations, K = 10..100 (pairs) and 10..30 (triplets)
   simK_ex.py           exhaustive pairwise screen with the same analysis
+  simK_noise.py        K sweep with the empirical noise of each real dataset
+  ci_rule.py           confidence intervals of the planning rule (bootstrap + Monte Carlo)
+  sim_replication*.py  replicates versus distinct mixtures (K = 18, waved design)
   sim18.py             18-molecule planning simulation
-  paper_figs.py        all manuscript figures (paper/*.png, *.pdf) and threshold tables
+  paper_figs.py        all figures (paper/*.png, *.pdf) and threshold tables
   figures.py, by_order.py   benchmark summary tables
   fig/                 result tables (CSV) produced by the scripts
   paper/               final figures (PNG 600 dpi + PDF) and tables
   res_*.pkl            benchmark outputs (so figures can be rebuilt without rerunning)
 data/                raw public data (not versioned, see data/README.md)
-manuscript/          ms.md + legends.md (sources), fill.py, build_docx.js, build_pptx.js,
-                     Krouk_Shasha_manuscript.docx, Krouk_Shasha_figures_A4.pptx
 web/                 interactive calculator (open web/index.html)
 ```
 
@@ -55,7 +59,6 @@ web/                 interactive calculator (open web/index.html)
 
 ```bash
 pip install -r requirements.txt          # numpy, scipy, pandas, scikit-learn, matplotlib, openpyxl
-npm install                              # docx, pptxgenjs (manuscript build only)
 
 # 1. raw data -> see data/README.md, then
 cd analysis
@@ -67,17 +70,14 @@ python run_bench.py kellermeier res_kellermeier.pkl
 python figures.py && python by_order.py && python rarity.py && python eb.py && python recal_check.py
 python simK.py trip fig/simK_trip.csv 2
 python simK2.py pairs fig/simK_pairs.csv && python simK2.py bg fig/simK_bg.csv
-python simK_ex.py
+python simK_ex.py && python simK_noise.py && python ci_rule.py
+python sim_replication.py && python sim_replication_R1.py
 python paper_figs.py                     # all figures -> paper/
-
-# 2. manuscript
-cd ../manuscript
-python fill.py && node build_docx.js && node build_pptx.js
 ```
 
 Or simply `make all` (see `Makefile`). The simulations take about one hour on two cores; the
 benchmark about one hour. Steps after `prepare_data.py` only need the files already in the repository
-if you skip the expensive runs (`make figures manuscript`).
+if you skip the expensive runs (`make figures`).
 
 ## Data sources
 
@@ -90,7 +90,7 @@ if you skip the expensive runs (`make figures manuscript`).
 ## Citation
 
 If you use the designs or the calculator, please cite Shasha *et al.* (2001) *Plant Physiol.* 127:1590–1594
-(doi:10.1104/pp.010683) and the manuscript (see `CITATION.cff`).
+(doi:10.1104/pp.010683) (see `CITATION.cff`).
 
 ## License
 

@@ -324,6 +324,41 @@ def figS3():
     fig.legend(handles=h, loc='upper center', ncol=8, frameon=False, fontsize=5.8)
     save(fig, 'FigS3')
 
+
+def figS4():
+    S3 = pd.read_csv('fig/rep_sim_R3.csv'); S1 = pd.read_csv('fig/rep_sim_R1.csv')
+    fig, axs = plt.subplots(1, 2, figsize=(11.4 * CM, 5.2 * CM), gridspec_kw=dict(wspace=.35, left=.11, right=.99, top=.86, bottom=.2))
+    for ax, (order, tit, L) in zip(axs, ((2, 'Five pairwise interactions', 'A'), (3, 'Three three-way interactions', 'B'))):
+        a = S3[(S3.order == order) & (S3.d == 1) & (S3.B == .1)]; b = S1[(S1.order == order) & (S1.d == 1) & (S1.B == .1)]
+        ax.plot(a.N * 3, a.recall, '-s', color=GREY, ms=2.6, label='3 replicates per mixture')
+        ax.plot(b.N, b.recall, '-o', color=TEAL, ms=2.6, label='1 measurement per mixture')
+        ax.set_xlim(0, 500); ax.set_ylim(-.02, 1.05); ax.set_title(tit + ' (size 1)', loc='left'); ax.grid(alpha=.2)
+        ax.set_xlabel('total measurements'); ax.set_ylabel('interactions recovered'); letter(ax, L, -.25)
+    axs[0].legend(frameon=False, loc='lower right', fontsize=5.8)
+    save(fig, 'FigS4')
+
+def figS5():
+    D = pd.read_csv('fig/simK_noise.csv'); C = pd.read_csv('fig/slope_by_noise.csv'); R = pd.read_csv('fig/rule_ci.csv')
+    fig, axs = plt.subplots(1, 2, figsize=(11.4 * CM, 5.4 * CM), gridspec_kw=dict(wspace=.45, left=.11, right=.99, top=.86, bottom=.2))
+    col = {'gaussian': GREY, 'ristova': TEAL, 'kellermeier': AMBER, 'tekin': RED}
+    lab = {'gaussian': 'Gaussian noise', 'ristova': 'noise of the transcriptome', 'kellermeier': 'noise of the root traits', 'tekin': 'noise of bacterial growth'}
+    ax = axs[0]
+    for nz, g in D.groupby('noise'):
+        pts = [(K, n_at(h.rename(columns={}), .95)) for K, h in g.assign(fdr=0, main_recall=1).groupby('K')]
+        pts = np.array(pts); ax.plot(pts[:, 0], pts[:, 1], '-o', color=col[nz], ms=2.6, label=lab[nz])
+    ax.set_xlabel('molecules (K)'); ax.set_ylabel('mixtures for 95% recall'); ax.set_title('Empirical noise', loc='left')
+    ax.legend(frameon=False, fontsize=5.4, loc='upper left'); letter(ax, 'A', -.25)
+    ax = axs[1]; rows = []
+    k = R[(R.term == 'K') & (R.method == 'scenario + Monte Carlo')].iloc[0]; rows.append(('all scenarios', k.estimate, k.lo, k.hi, INK))
+    for nz in ('gaussian', 'ristova', 'kellermeier', 'tekin'):
+        c = C[C.noise == nz].iloc[0]; rows.append((lab[nz].replace('noise of the ', '').replace('noise of ', ''), c.slope, c.lo, c.hi, col[nz]))
+    for i, (n, e, lo, hi, c) in enumerate(rows):
+        ax.errorbar(e, i, xerr=[[e - lo], [hi - e]], fmt='o', color=c, ms=3.5, capsize=2, lw=1)
+    ax.axvline(1.618, color=GREY, ls=':', lw=.7); ax.text(1.625, len(rows) - .6, 'φ', fontsize=7, color=GREY)
+    ax.set_yticks(range(len(rows))); ax.set_yticklabels([r[0] for r in rows], fontsize=6); ax.invert_yaxis()
+    ax.set_xlabel('additional mixtures per molecule'); ax.set_title('Coefficient of K (95% CI)', loc='left'); letter(ax, 'B', -.55)
+    save(fig, 'FigS5')
+
 if __name__ == '__main__':
     import sys
     for f in (sys.argv[1:] or ['fig1', 'fig2', 'fig3', 'fig4', 'fig5']): globals()[f]()

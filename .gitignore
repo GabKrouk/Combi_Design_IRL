@@ -5,8 +5,7 @@ analysis/prep/
 data/**/*
 !data/README.md
 analysis/log_*.txt
-manuscript/render/
-manuscript/ms.json
+manuscript/
 .DS_Store
 ~$*
 log_*.txt

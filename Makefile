@@ -1,9 +1,9 @@
 PY = python3
 A = cd analysis &&
 
-.PHONY: all data bench sims figures manuscript
+.PHONY: all data bench sims figures
 
-all: data bench sims figures manuscript
+all: data bench sims figures
 
 data:
 	$(A) $(PY) prepare_data.py && $(PY) truth.py
@@ -19,9 +19,9 @@ sims:
 	$(A) $(PY) simK2.py pairs fig/simK_pairs.csv
 	$(A) $(PY) simK2.py bg fig/simK_bg.csv
 	$(A) $(PY) simK_ex.py
+	$(A) $(PY) simK_noise.py && $(PY) ci_rule.py
+	$(A) $(PY) sim_replication.py && $(PY) sim_replication_R1.py
 
 figures:
 	$(A) $(PY) paper_figs.py
 
-manuscript:
-	cd manuscript && $(PY) fill.py && node build_docx.js && node build_pptx.js
